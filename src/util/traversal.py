@@ -1,27 +1,75 @@
 import os
 import re
-import fnmatch
 
 from pathlib import Path
 from functools import reduce
 
+from fnmatch import translate
+from typing import Iterator, Iterable
 
-def compile_fnmatch_patterns(patterns: list[str] = None, regex_flags: list[re.RegexFlag] = None) -> list[re.Pattern]:
-    f"""
+
+def translate_glob_patterns(patterns: Iterable[str]) -> Iterator[str]:
+    """
+    Take glob-style patterns and translate them into regexes.
+
+    :param patterns: An iterable of glob-style patterns to convert to regex patterns.
+    :return: An iterator of strings, corresponding to regexes matching the same content the passed glob style patterns would.
+    """
+
+    for pattern in patterns:
+        # patterns get translated part by part, parts being delineated by occurences of '**'
+        translated_parts = []
+        parts = pattern.split('**')
+        for part in parts:
+            # we translate the pattern with the fnmatch function
+            translated_part = translate(part)
+
+            # pattern was split on '**', so '.*' patterns must have been produced by '*'
+            # we don't want these to match os.sep, so we replace appropriately:
+            #     the pattern that matches everything '.*' is replaced by
+            #     the pattern that matches everything but os.sep rf'[^{os.sep}]*'
+            translated_part = translated_part.replace(r'.*', rf'[^{os.sep}]*')
+
+            # fnmatch appends r'\Z' (matches end of string) to the end, so we strip that off the parts
+            translated_part = translated_part.rstrip(r'\Z')
+
+            # part should have been appropriately translated now
+            translated_parts.append(translated_part)
+
+            # TODO
+            #  consider r'/path/to/**/foo' -> r'(s:/path/to/)(s:.*)(s:/foo)'
+            #  what about '/path/to/foo'?
+            #  it might not be matched, because part 1 consumes the leading /, that part 3 also expects
+            #  .
+            #  MITIGATION:
+            #   we could lstrip os.sep from the previous part or rstrip os.sep from the next
+
+        # now we want to combine this into the full pattern again,
+        # '**' should match everything, also past directory borders, so we join with r'.*'
+        # fnmatch wraps patterns in r'(s:<pattern>)', to avoid adding matching groups (?), we just copy that behaviour
+        # also we append r'\Z' to exclude matches with longer strings
+        translated_pattern = r'(?s:.*)'.join(translated_parts) + r'\Z'
+
+        yield translated_pattern
+
+
+def compile_glob_patterns(patterns: list[str], regex_flags: list[re.RegexFlag] = None) -> list[re.Pattern]:
+    """
     Take a list of glob-style patterns and compile them into regexes, accounting for passed flags.
 
     :param patterns: list of glob-style patterns to convert to regexes
     :param regex_flags: list of regex flags, will be reduced to a single flag and compiled into regexes
     :return: list of compiled regexes, corresponding to the passed glob style patterns
     """
-
-    # make sure regex flags and patterns are properly initialized, even if not passed explicitly
-    patterns = patterns if patterns is not None else []
-
-    # reduction might as well be done in argparse, or on the caller side, this would probably be preferable
+    # reduction might as well be done in argparse, or on the caller side, this might be preferable
     flags = reduce(lambda x, y: x | y, regex_flags) if regex_flags is not None else 0
 
-    return [re.compile(fnmatch.translate(pattern), flags=flags) for pattern in patterns]
+    # used to be done with
+    # [re.compile(fnmatch.translate(pattern), flags=flag) for pattern in patterns]
+    # but this does not properly treat '*' and '**' with regard to directory separators,
+    # so now there is a dedicated function
+
+    return [re.compile(translated_pattern, flags=flags) for translated_pattern in translate_glob_patterns(patterns)]
 
 
 def traverse_file_tree(root: Path = Path().home(),
@@ -55,31 +103,33 @@ def traverse_file_tree(root: Path = Path().home(),
 
     # regard and ignore patterns are assumed to be glob/fnmatch style strings
     # we translate them to regexes and compile them with the appropriate regex flags
-    regard_patterns: list[re.Pattern] = compile_fnmatch_patterns(regard_patterns, regex_flags)
-    ignore_patterns: list[re.Pattern] = compile_fnmatch_patterns(ignore_patterns, regex_flags)
+    regard_patterns: list[re.Pattern] = compile_glob_patterns(regard_patterns, regex_flags)
+    ignore_patterns: list[re.Pattern] = compile_glob_patterns(ignore_patterns, regex_flags)
 
     # iterate over the file tree
     for (dirpath, dirnames, filenames) in os.walk(start):
         # lists must be modified in place
 
         # if include_gitignore is set and a .gitignore file is found, include
-        # its contents in the ignore patterns, we ensure that the new patterns
+        # its contents in our ignore patterns, we ensure that the new patterns
         # only match under this dir by prepending dirpath to them
         # see also https://git-scm.com/docs/gitignore
         if include_gitignore and '.gitignore' in filenames:
             with Path(dirpath, '.gitignore').open() as ignore_file:
-                lines = ignore_file.readlines()
                 new_patterns = []
-                for line in lines:
+                for line in ignore_file:
+                    # contrary to normal gitignore interpretation rules (as far as I understand them),
+                    # we will ONLY MATCH UNDER the current dir, and not up to the repository root
+                    # also NO UNIGNORING PATHS with '!' is possible
+
                     # ignore empty lines and comments
                     line = line.strip()
                     if line == '' or line.startswith('#'):
                         continue
 
-                    # contrary to normal gitignore interpretation rules, we will only match UNDER the current dir
                     new_patterns.append(os.path.join(dirpath, line))
 
-            ignore_patterns.extend(compile_fnmatch_patterns(new_patterns, regex_flags))
+            ignore_patterns.extend(compile_glob_patterns(new_patterns, regex_flags))
 
         # exclude files don't match any regard pattern, if there are regard patterns
         if regard_patterns:

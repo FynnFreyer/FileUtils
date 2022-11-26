@@ -2,19 +2,41 @@ from util.traversal import traverse_file_tree, translate_glob_patterns, compile_
 
 
 class TestFileTreeTraversal:
+    """
+    # file and dir here and in sub dirs
+    anywhere_ignored_file
+    anywhere_ignored_dir/
+    """
 
-    def test_gitignore_matches_subdirs(self, file_tree_with_gitignore):
-        root = file_tree_with_gitignore
-        results = traverse_file_tree(root, include_gitignore=True)
+    def test_gitignore_ignores_basic_pattern_in_topdir(self, file_tree_with_gitignore):
+        results = traverse_file_tree(file_tree_with_gitignore, include_gitignore=True)
 
-        assert root / 'some_file' in results
-        assert root / 'some_dir' in results
+        assert file_tree_with_gitignore / 'anywhere_ignored_file' not in results
+        assert file_tree_with_gitignore / 'anywhere_ignored_dir' not in results
 
-        assert root / 'another_file' in results
-        assert root / 'another_dir' in results
+    def test_gitignore_ignores_basic_pattern_in_subdir(self, file_tree_with_gitignore):
+        """
+        # file and dir here and in sub dirs
+        anywhere_ignored_file
+        anywhere_ignored_dir/
+        """
+        results = traverse_file_tree(file_tree_with_gitignore, include_gitignore=True)
 
-        assert not root / 'sub_dir' / 'another_file' in results
-        assert not root / 'sub_dir' / 'another_dir' in results
+        assert file_tree_with_gitignore / 'not_ignored_dir' / 'anywhere_ignored_file' not in results
+        assert file_tree_with_gitignore / 'not_ignored_dir' / 'anywhere_ignored_dir' not in results
+
+
+    def test_gitignore_ignores_top_level_pattern(self, file_tree_with_gitignore):
+        results = traverse_file_tree(file_tree_with_gitignore, include_gitignore=True)
+
+        assert file_tree_with_gitignore / 'toplevel_ignored_file' not in results
+        assert file_tree_with_gitignore / 'toplevel_ignored_dir' not in results
+
+        assert file_tree_with_gitignore / 'not_ignored_file' in results
+        assert file_tree_with_gitignore / 'not_ignored_dir' in results
+
+        assert file_tree_with_gitignore / 'not_ignored_dir' / 'anywhere_ignored_file' not in results
+        assert file_tree_with_gitignore / 'not_ignored_dir' / 'toplevel_ignored_file' in results
 
     def test_regard_pattern_excludes_unregarded(self, file_tree):
         assert False
@@ -33,5 +55,19 @@ class TestGlobPatterns:
 
     def test_double_asterisk_matches_top_level_dir(self):
         pattern = compile_glob_patterns(['/path/to/**/foo'])[0]
-        # not just '/path/to//foo'
         assert pattern.match('/path/to/foo')
+
+    def test_double_asterisk_matches_sub_dir(self):
+        pattern = compile_glob_patterns(['/path/to/**/foo'])[0]
+        # not just '/path/to//foo'
+        assert pattern.match('/path/to/another/foo')
+
+    def test_single_asterisk_respects_separators(self):
+        pattern = compile_glob_patterns(['/path/to/*/foo'])[0]
+        assert pattern.match('/path/to/another/foo')
+        assert not pattern.match('/path/to/yet/another/foo')
+
+    def test_patterns_dont_extend_past_definition(self):
+        pattern = compile_glob_patterns(['/path/to/foo'])[0]
+        assert pattern.match('/path/to/foo')
+        assert not pattern.match('/path/to/foobar')

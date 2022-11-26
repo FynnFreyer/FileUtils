@@ -49,7 +49,7 @@ def file_tree(tree_builder, test_dir):
 
 
 @pytest.fixture(scope='class')
-def file_tree_with_gitignore(tree_builder):
+def file_tree_with_gitignore(tree_builder, test_dir):
     # we don't rely on the file_tree fixture, to not pollute it for other tests
     root = tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
     copyfile(test_dir / 'assets/test_traversal.gitignore', root / '.gitignore')

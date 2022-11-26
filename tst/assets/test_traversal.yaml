@@ -1,25 +1,12 @@
-some_file:
-some_dir/:
-another_file:
-another_dir/:
-sub_dir/:
-  another_file:
-  another_dir/:
-  deep_file:
-  deep_dir/:
-  some_file:
-  some_dir/:
-    another_file:
-    another_dir/:
-    deep_file:
-    deep_dir/:
-    some_file:
-    some_dir/:
-      deep_file:
-      deep_dir/:
-        .hidden_file:
-        .hidden_dir/:
-        .hidden_file_2:
-        .hidden_dir_2/:
-        important.log:
-        moar.log.d/:
+anywhere_ignored_file:
+anywhere_ignored_dir/:
+  not_ignored_file:
+toplevel_ignored_file:
+toplevel_ignored_dir/:
+  not_ignored_file:
+not_ignored_file:
+not_ignored_dir/:
+  anywhere_ignored_file:
+  anywhere_ignored_dir/:
+  toplevel_ignored_file:
+  toplevel_ignored_dir/:

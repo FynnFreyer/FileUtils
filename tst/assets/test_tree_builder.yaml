@@ -1,0 +1,25 @@
+some_file:
+some_dir/:
+another_file:
+another_dir/:
+sub_dir/:
+  another_file:
+  another_dir/:
+  deep_file:
+  deep_dir/:
+  some_file:
+  some_dir/:
+    another_file:
+    another_dir/:
+    deep_file:
+    deep_dir/:
+    some_file:
+    some_dir/:
+      deep_file:
+      deep_dir/:
+        .hidden_file:
+        .hidden_dir/:
+        .hidden_file_2:
+        .hidden_dir_2/:
+        important.log:
+        moar.log.d/:

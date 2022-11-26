@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 
@@ -5,7 +6,7 @@ from pathlib import Path
 from util.hashing import get_dir_hash_map
 
 
-def find_duplicate_files(root: Path,
+def find_duplicate_files(root: str | bytes | os.PathLike | Path,
                          regard_patterns: list[str] = None,
                          regard_patterns_concern_dirs: bool = False,
                          ignore_patterns: list[str] = None,

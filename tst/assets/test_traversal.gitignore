@@ -1,0 +1,24 @@
+# file and dir here and in sub dirs
+some_file
+some_dir/
+
+# file and dir only this dir
+/another_file
+/another_dir/
+
+# glob pattern file and dir
+*.log
+*.log.d/
+
+# hidden file and dir
+.hidden_file
+.hidden_dir/
+
+# glob pattern hidden file and dir
+.hidden_*_2
+.hidden_*_2/
+
+# double glob file and dir
+**/deep_file
+**/deep_dir/
+

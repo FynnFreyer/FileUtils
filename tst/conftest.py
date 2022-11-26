@@ -1,7 +1,7 @@
-from shutil import copyfile
-
 import pytest
+
 from pathlib import Path
+from shutil import copyfile
 from yaml import safe_load as load, safe_dump as dump
 
 
@@ -34,17 +34,23 @@ class FileTreeBuilder:
 
 
 @pytest.fixture(scope="session")
+def test_dir():
+    return Path(__file__).parent
+
+
+@pytest.fixture(scope="session")
 def tree_builder(tmp_path_factory):
     return FileTreeBuilder(tmp_path_factory)
 
-@pytest.fixture(scope='class')
-def file_tree(tree_builder):
-    return tree_builder.from_yaml('assets/test_traversal.yaml')
 
 @pytest.fixture(scope='class')
-def file_tree_with_gitignore():
+def file_tree(tree_builder, test_dir):
+    return tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
+
+
+@pytest.fixture(scope='class')
+def file_tree_with_gitignore(tree_builder):
     # we don't rely on the file_tree fixture, to not pollute it for other tests
-    root = tree_builder.from_yaml('assets/test_traversal.yaml')
-    copyfile(Path('assets/test_traversal.gitignore'), root / '.gitignore')
+    root = tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
+    copyfile(test_dir / 'assets/test_traversal.gitignore', root / '.gitignore')
     return root
-

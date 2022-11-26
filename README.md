@@ -12,8 +12,20 @@ Works with **Python >= 3.10**
 
 ## Todo
 
-- main script with subcommands
+- dry run
+- handle negation in gitignore
+- proper tests
+  - cross platform tests
+  - traversal
+    - more gitignore szenarios
+    - ignore/regard patterns
+    - regard_concerns_dirs
+  - duplicates
+  - naming
+  - hashing
+- more documentation
+  - inline is good **so far**, but readme, and maybe integrate with readthedocs?
+- integrate naming with traverse.py
 - merge directories according to strategy
 - rename files according to strategy
-- proper tests
-- dry run
+- main script with subcommands

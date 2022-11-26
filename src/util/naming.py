@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+import re
 
 from pathlib import Path
 from string import ascii_letters, digits
@@ -28,36 +29,42 @@ def parse_args(args: list[str] = None):
     return parser.parse_args(args)
 
 
-def offending_paths(top: str | Path,
-                    excluded: list[str | Path] = None,
-                    allowed_chars: str = POSIX_PORTABLE_FILENAME_CHARACTERS):
-    # initialise excluded paths if not passed explicitly
-    excluded = [] if excluded is None else excluded
+def get_offending_paths(root: str | bytes | os.PathLike | Path,
+                        allowed_chars: str = POSIX_PORTABLE_FILENAME_CHARACTERS,
+                        regard_patterns: list[str] = None,
+                        regard_patterns_concern_dirs: bool = False,
+                        ignore_patterns: list[str] = None,
+                        include_gitignore: bool = False,
+                        regex_flags: list[re.RegexFlag] = None,
+                        processes: int = 1,
+                        print_results: bool = False) -> list[Path]:
+
+    """"""
 
     # make sure paths are properly resolved and absolute
-    top = Path(top).resolve()
-    excluded = [Path(ex).resolve() for ex in excluded]
+    root = Path(root).resolve()
+    excluded = [Path(ex).resolve() for ex in []]
 
     # if the passed path does not exist we can't proceed
-    if not top.exists():
-        raise ValueError(f'{top} does not exist')
+    if not root.exists():
+        raise ValueError(f'{root} does not exist')
 
     # if the passed path is a file
-    if not top.is_dir():
-        file = top
+    if not root.is_dir():
+        file = root
         # we walk the parent directory instead
-        top = file.parent
+        root = file.parent
         # but exclude everything except the file itself
-        excluded.extend([path.resolve() for path in top.iterdir()
+        excluded.extend([path.resolve() for path in root.iterdir()
                          if not file.samefile(path)])
 
     # walk the directory
-    for (dirpath, dirnames, filenames) in os.walk(top):
+    for (dirpath, dirnames, filenames) in os.walk(root):
         # we modify dirnames and filenames in place to limit walk
         for ex in excluded:
             # resolve dir and file names
-            dirpaths = [Path(top, dirpath, name) for name in dirnames]
-            filepaths = [Path(top, dirpath, name) for name in filenames]
+            dirpaths = [Path(root, dirpath, name) for name in dirnames]
+            filepaths = [Path(root, dirpath, name) for name in filenames]
 
             # if they are excluded, remove them
             if ex in dirpaths: dirnames.remove(ex.name)
@@ -69,7 +76,7 @@ def offending_paths(top: str | Path,
             # checking against names is better, because if we have an invalid
             # subdir name we only yield it once and not also all paths under it
             if not all([char in allowed_chars for char in name]):
-                offending_path = Path(top, dirpath, name)
+                offending_path = Path(root, dirpath, name)
                 yield offending_path
 
 

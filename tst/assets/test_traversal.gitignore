@@ -1,24 +1,28 @@
 # file and dir here and in sub dirs
-some_file
-some_dir/
+anywhere_ignored_file
+anywhere_ignored_dir/
 
 # file and dir only this dir
-/another_file
-/another_dir/
+/toplevel_ignored_file
+/toplevel_ignored_dir/
+
+# middle slash
+another/toplevel_ignored_file
+another/toplevel_ignored_dir/
 
 # glob pattern file and dir
-*.log
-*.log.d/
+ignored_glob_file_*
+ignored_glob_dir_*/
 
 # hidden file and dir
-.hidden_file
-.hidden_dir/
+.ignored_hidden_file
+.ignored_hidden_dir/
 
 # glob pattern hidden file and dir
-.hidden_*_2
-.hidden_*_2/
+.ignored_hidden_*_2
+.ignored_hidden_*_2/
 
 # double glob file and dir
-**/deep_file
-**/deep_dir/
+**/ignored_deep_file
+**/ignored_deep_dir/
 

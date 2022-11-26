@@ -5,24 +5,75 @@ from pathlib import Path
 from functools import reduce
 
 from fnmatch import translate
-from typing import Iterator, Iterable
 
 
-def translate_glob_patterns(patterns: Iterable[str]) -> Iterator[str]:
+def gitignore_to_glob_pattern(root: str, pattern: str) -> str:
+    """
+    Takes the absolute root of a git repo, and gitignore patterns, and translates them into absolute glob patterns.
+    """
+    starting_slash = pattern.startswith('/')
+    trailing_slash = pattern.endswith('/')
+
+    parts = pattern.split('/')
+    non_empty_parts = [part for part in parts if part != '']
+
+    middle_slash = len(non_empty_parts) >= 2
+
+    relative_to_root = starting_slash or middle_slash
+    only_dirs = trailing_slash
+
+    # make sure root has trailing slash
+    root = root + os.sep  if not root.endswith(os.sep) else root
+
+    # make sure pattern has no starting slash
+    pattern = pattern.lstrip('/') if pattern.startswith('/') else pattern
+    # replace / in pattern with os.sep
+    pattern = pattern.replace('/', os.sep)
+
+    if relative_to_root:
+        return root + pattern
+    else:
+        return root + '**' + pattern
+
+def translate_glob_patterns(patterns: list[str] | None) -> list[str]:
     """
     Take glob-style patterns and translate them into regexes.
+    For correct handling of directory patterns (trailing slash),
+    regexes must be used on path strings with slash appended in case
+    of directories, this must be done externally by the caller.
 
     :param patterns: An iterable of glob-style patterns to convert to regex patterns.
     :return: An iterator of strings, corresponding to regexes matching the same content the passed glob style patterns would.
     """
 
+    patterns = patterns if patterns is not None else []
+    translated_patterns = []
+
     for pattern in patterns:
         # patterns get translated part by part, parts being delineated by occurences of '**'
         translated_parts = []
         parts = pattern.split('**')
-        for part in parts:
+        for i, part in enumerate(parts):
+            # fnmatch.translate transforms the patterns in a way, that make it not easy to work with it,
+            # so we do some housekeeping beforehand, this will make more sense if taken in context with the rest
+            #
+            # consider r'/path/to/**/foo' -> r'(s:/path/to/)(s:.*)(s:/foo)', what about '/path/to/foo'?
+            # it would not be matched, because part 1 consumes the leading /, that part 3 also expects
+            #
+            # we could lstrip from part 1 or rstrip from part 3, but ending on / limits to directories,
+            # so we take the leading / from the next pattern instead of the trailing from last
+            #
+            # TLDR; we lstrip('/') on parts EXCEPT the first
+
+            first_iteration = i == 0
+            translated_part = part.lstrip('/') if not first_iteration else part
+
+            # TODO
+            #  if fnmatch.translate accounts for os.sep, we want to strip os.sep, not '/'
+            #  if not we want to account for it, by doing translated_part.replace('/', os.sep)
+
             # we translate the pattern with the fnmatch function
-            translated_part = translate(part)
+            translated_part = translate(translated_part)
 
             # pattern was split on '**', so '.*' patterns must have been produced by '*'
             # we don't want these to match os.sep, so we replace appropriately:
@@ -36,24 +87,29 @@ def translate_glob_patterns(patterns: Iterable[str]) -> Iterator[str]:
             # part should have been appropriately translated now
             translated_parts.append(translated_part)
 
-            # TODO
-            #  consider r'/path/to/**/foo' -> r'(s:/path/to/)(s:.*)(s:/foo)'
-            #  what about '/path/to/foo'?
-            #  it might not be matched, because part 1 consumes the leading /, that part 3 also expects
-            #  .
-            #  MITIGATION:
-            #   we could lstrip os.sep from the previous part or rstrip os.sep from the next
-
         # now we want to combine this into the full pattern again,
         # '**' should match everything, also past directory borders, so we join with r'.*'
         # fnmatch wraps patterns in r'(s:<pattern>)', to avoid adding matching groups (?), we just copy that behaviour
-        # also we append r'\Z' to exclude matches with longer strings
-        translated_pattern = r'(?s:.*)'.join(translated_parts) + r'\Z'
+        translated_pattern = r'(?s:.*)'.join(translated_parts)
 
-        yield translated_pattern
+        # since we want to exclude longer matches, but have a trailing seperator be optional for matching directories,
+        # we append rf'{os.sep}?' to the pattern, to optionally match a single seperator
+        if not translated_pattern.endswith(os.sep):
+            # TODO
+            #  doing so should actually be unnecessary, because str(dir_path) does not come with a trailing slash,
+            #  but how do we ensure the opposite, that a trailing slash only matches dirs,
+            #  instead of just excluding everything?
+            translated_pattern += rf'{os.sep}?'
+
+        # now we append r'\Z' to the pattern to avoid matches with longer strings
+        translated_pattern += r'\Z'
+
+        translated_patterns.append(translated_pattern)
+
+    return translated_patterns
 
 
-def compile_glob_patterns(patterns: list[str], regex_flags: list[re.RegexFlag] = None) -> list[re.Pattern]:
+def compile_glob_patterns(patterns: list[str] | None, regex_flags: list[re.RegexFlag] = None) -> list[re.Pattern]:
     """
     Take a list of glob-style patterns and compile them into regexes, accounting for passed flags.
 
@@ -72,15 +128,17 @@ def compile_glob_patterns(patterns: list[str], regex_flags: list[re.RegexFlag] =
     return [re.compile(translated_pattern, flags=flags) for translated_pattern in translate_glob_patterns(patterns)]
 
 
-def traverse_file_tree(root: Path = Path().home(),
+def traverse_file_tree(root: str | bytes | os.PathLike | Path,
                        regard_patterns: list[str] = None,
                        regard_patterns_concern_dirs: bool = False,
                        ignore_patterns: list[str] = None,
                        include_gitignore: bool = False,
                        regex_flags: list[re.RegexFlag] = None) -> set[Path]:
-    f"""
+    """
     Traverse a file tree according to specified parameters.
     Returns fully resolved paths.
+    Beware, gitignore inclusions has strict limitations with regard to supported patterns.
+    So far no negation is possible.
 
     :param root: directory under which to start
     :param regard_patterns: list of glob style patterns of files to include in the results, if set others are ignored
@@ -92,11 +150,11 @@ def traverse_file_tree(root: Path = Path().home(),
     """
 
     # resolve the starting point
-    start = Path(root).resolve()
+    root = Path(root).resolve()
 
     # guard against non-directory starting points
-    if not start.is_dir():
-        raise NotADirectoryError(f'{start} is not a directory')
+    if not root.is_dir():
+        raise NotADirectoryError(f'{root} is not a directory')
 
     # initialize the result set
     paths = set()
@@ -107,7 +165,7 @@ def traverse_file_tree(root: Path = Path().home(),
     ignore_patterns: list[re.Pattern] = compile_glob_patterns(ignore_patterns, regex_flags)
 
     # iterate over the file tree
-    for (dirpath, dirnames, filenames) in os.walk(start):
+    for (dirpath, dirnames, filenames) in os.walk(root):
         # lists must be modified in place
 
         # if include_gitignore is set and a .gitignore file is found, include
@@ -127,7 +185,8 @@ def traverse_file_tree(root: Path = Path().home(),
                     if line == '' or line.startswith('#'):
                         continue
 
-                    new_patterns.append(os.path.join(dirpath, line))
+                    new_pattern = gitignore_to_glob_pattern(dirpath, line)
+                    new_patterns.append(new_pattern)
 
             ignore_patterns.extend(compile_glob_patterns(new_patterns, regex_flags))
 
@@ -148,12 +207,14 @@ def traverse_file_tree(root: Path = Path().home(),
             # iterating over them is almost never a good idea, and seldom necessary, so I don't
 
             if regard_patterns_concern_dirs:
-                # TODO this logic should be extracted to a function
+                # TODO this logic should probably be extracted to a separate function
+                #   removing stuff from a list in this fashion happens four times in here
                 # do the same thing for directories
                 dirs_to_remove = []
                 for dirname in dirnames:
                     # match against the unresolved dir name  and mark it for removal
-                    if not any([pattern.search(dirname) for pattern in regard_patterns]):
+                    # dirs need trailing slash
+                    if not any([pattern.search(dirname + os.sep) for pattern in regard_patterns]):
                         dirs_to_remove.append(dirname)
 
                 # remove those dirs
@@ -161,8 +222,10 @@ def traverse_file_tree(root: Path = Path().home(),
 
         # exclude files and dirs that match any ignore pattern
         for ignore_pattern in ignore_patterns:
+            # match against the unresolved dir name  and mark it for removal
+            # dirs need trailing slash
             dirs_to_remove = [dirname for dirname in dirnames
-                              if ignore_pattern.search(os.path.join(dirpath, dirname))]
+                              if ignore_pattern.search(os.path.join(dirpath, dirname) + os.sep)]
 
             files_to_remove = [filename for filename in filenames
                                if ignore_pattern.search(os.path.join(dirpath, filename))]

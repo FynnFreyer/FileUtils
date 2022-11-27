@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  PYTHONPATH: ${PYTHONPATH}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst
+
 defaults:
   run:
     shell: bash
@@ -25,7 +28,7 @@ jobs:
     - name: Setup Environment
       run: |
         # Add src and tst to $PYTHONPATH
-        echo "PYTHONPATH=${PYTHONPATH}:${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst" >> $GITHUB_ENV
+        # echo "PYTHONPATH=${PYTHONPATH}:${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst" >> $GITHUB_ENV
         # install tree if on macos
         if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree ;fi
     - name: Set up Python ${{ matrix.python-version }}

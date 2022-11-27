@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  PYTHONPATH: ${PYTHONPATH}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst
+  PYTHONPATH: ${{ PYTHONPATH }}:${{ GITHUB_WORKSPACE }}/src:${{ GITHUB_WORKSPACE }}/tst
 
 defaults:
   run:

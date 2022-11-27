@@ -51,5 +51,5 @@ jobs:
         if [ ${{ matrix.os }} == 'windows-latest' ]; then 
           cp -a ../src/* .
           PYTHONPATH=${PYTHONPATH}:.
-        ;fi
+        fi
         pytest

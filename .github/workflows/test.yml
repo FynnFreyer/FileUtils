@@ -26,7 +26,7 @@ jobs:
       run: |
         # Add src and tst to $PYTHONPATH
         echo "PYTHONPATH=${PYTHONPATH}:${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst" >> $GITHUB_ENV
-        # install tree on macos
+        # install tree if on macos
         if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree ;fi
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
@@ -37,7 +37,6 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -47,9 +46,4 @@ jobs:
     - name: Test with pytest
       run: |
         cd tst
-        # Windows somehow doesn't find the modules in src, despite the path being set to include it. Get bent with a sharp stick Billy
-        if [ ${{ matrix.os }} == 'windows-latest' ]; then 
-          cp -a ../src/* .
-          PYTHONPATH=${PYTHONPATH}:.
-        fi
         pytest

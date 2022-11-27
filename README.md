@@ -1,3 +1,5 @@
+[![Tests on Linux | MacOS | Windows](https://github.com/FynnFreyer/FileUtils/actions/workflows/test.yml/badge.svg)](https://github.com/FynnFreyer/FileUtils/actions/workflows/test.yml)
+
 # FileUtils
 
 Some utilities to manage files.

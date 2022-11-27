@@ -38,6 +38,7 @@ jobs:
       run: |
         # Add src and tst to $PYTHONPATH
         echo "PYTHONPATH=${PYTHONPATH}:${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst" >> $GITHUB_ENV
+        python -c "import sys;print(sys.path)"
 
     - name: Install dependencies
       run: |
@@ -54,5 +55,6 @@ jobs:
 
     - name: Test with pytest
       run: |
+        python -c "import sys;print(sys.path)"
         cd tst
         pytest

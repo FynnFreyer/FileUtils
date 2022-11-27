@@ -21,7 +21,7 @@ jobs:
     - name: Add src to $PYTHONPATH
       run: |
         PWD=$(pwd)
-        echo "PYTHONPATH=$PYTHONPATH:$PWD/src:$PWD/tst" >> $GITHUB_ENV
+        echo "PYTHONPATH=${PYTHONPATH}:${PWD}/src:${PWD}/tst" >> $GITHUB_ENV
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:

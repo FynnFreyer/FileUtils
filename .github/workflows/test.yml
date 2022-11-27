@@ -29,10 +29,7 @@ jobs:
         echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/src:${PWD}/tst" >> $GITHUB_ENV
         # install tree on macos
         if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree ;fi
-        if [ ${{ matrix.os }} == 'windows-latest' ]; then 
-          echo what the hell windoze? just gimme that path 
-          echo $PYTHONPATH 
-        ;fi
+        if [ ${{ matrix.os }} == 'windows-latest' ]; then echo $PYTHONPATH >> $GITHUB_OUTPUT ;fi
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:

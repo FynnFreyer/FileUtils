@@ -46,7 +46,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
     - name: Test with pytest
       run: |
-        # cd ../tst
+        cd tst
         # Windows somehow doesn't find the modules in src, despite the path being set to include it. Get bent with a sharp stick Billy
         # if [ ${{ matrix.os }} == 'windows-latest' ]; then cp -a ../src/* . ;fi
         pytest

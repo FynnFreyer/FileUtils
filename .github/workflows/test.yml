@@ -1,4 +1,4 @@
-name: Test on major Platforms
+name: Tests on Linux | MacOS | Windows
 
 on:
   push:

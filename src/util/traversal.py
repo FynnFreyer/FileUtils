@@ -44,7 +44,7 @@ def translate_glob_patterns(patterns: list[str] | None) -> list[str]:
     of directories, this must be done externally by the caller.
 
     :param patterns: An iterable of glob-style patterns to convert to regex patterns.
-    :return: An iterator of strings, corresponding to regexes matching the same content the passed glob style patterns would.
+    :return: A list of strings, corresponding to regexes matching the same content the passed glob style patterns would.
     """
 
     patterns = patterns if patterns is not None else []

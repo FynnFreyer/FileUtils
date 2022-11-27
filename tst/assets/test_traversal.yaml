@@ -10,3 +10,25 @@ not_ignored_dir/:
   anywhere_ignored_dir/:
   toplevel_ignored_file:
   toplevel_ignored_dir/:
+  deep_ignored_file:
+  deep_ignored_dir/:
+  not_ignored_file:
+  not_ignored_dir/:
+    deep_ignored_file:
+    deep_ignored_dir/:
+    not_ignored_file:
+    not_ignored_dir/:
+      deep_ignored_file:
+      deep_ignored_dir/:
+another/:
+  not_ignored_file:
+  not_ignored_dir/:
+  toplevel_ignored_file:
+  toplevel_ignored_dir/:
+  another/:
+    toplevel_ignored_file:
+    toplevel_ignored_dir/:
+      not_ignored_file:
+      not_ignored_dir/:
+deep_ignored_file:
+deep_ignored_dir/:

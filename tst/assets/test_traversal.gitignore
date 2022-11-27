@@ -23,6 +23,5 @@ ignored_glob_dir_*/
 .ignored_hidden_*_2/
 
 # double glob file and dir
-**/ignored_deep_file
-**/ignored_deep_dir/
-
+**/deep_ignored_file
+**/deep_ignored_dir/

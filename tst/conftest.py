@@ -44,13 +44,13 @@ def tree_builder(tmp_path_factory):
 
 
 @pytest.fixture(scope='class')
-def file_tree(tree_builder, test_dir):
-    return tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
+def file_tree(tree_builder):
+    return tree_builder.from_yaml('assets/test_traversal.yaml')
 
 
 @pytest.fixture(scope='class')
-def file_tree_with_gitignore(tree_builder, test_dir):
+def file_tree_with_gitignore(tree_builder):
     # we don't rely on the file_tree fixture, to not pollute it for other tests
-    root = tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
-    copyfile(test_dir / 'assets/test_traversal.gitignore', root / '.gitignore')
+    root = tree_builder.from_yaml('assets/test_traversal.yaml')
+    copyfile('assets/test_traversal.gitignore', root / '.gitignore')
     return root

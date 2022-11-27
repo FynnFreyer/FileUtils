@@ -89,7 +89,7 @@ def main():
 
     offended = False
     try:
-        for offending_path in offending_paths(top, excluded, allowed_chars):
+        for offending_path in get_offending_paths(top, excluded, allowed_chars):
             print(offending_path, file=sys.stderr)
             offended = True
     except (KeyboardInterrupt, SystemExit):

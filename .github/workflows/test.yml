@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+defaults:
+  run:
+    shell: bash
+    working-directory: src
+
 jobs:
   build:
 
@@ -18,10 +23,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Add src to $PYTHONPATH
+    - name: Setup
       run: |
-        PWD=$(pwd)
+        # Add src to $PYTHONPATH
         echo "PYTHONPATH=${PYTHONPATH}:${PWD}/src:${PWD}/tst" >> $GITHUB_ENV
+        # install tree on macos
+        if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree;fi
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -39,5 +46,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
     - name: Test with pytest
       run: |
-        cd tst
-        pytest
+        pytest ../tst

@@ -81,7 +81,10 @@ def translate_glob_patterns(patterns: list[str] | None) -> list[str]:
             #     the pattern that matches everything '.*' is replaced by
             #     the pattern that matches everything but os.sep rf'[^{os.sep}]*'
             # TODO change back after test if unsuccessful
-            translated_part = translated_part.replace(r'.*', f'[^{os.sep}]*')
+            def escape(_str):
+                return _str.replace('\\', '\\\\')
+
+            translated_part = translated_part.replace(r'.*', escape(rf'[^{os.sep}]*'))
 
             # fnmatch appends r'\Z' (matches end of string) to the end, so we strip that off the parts
             translated_part = translated_part.rstrip(r'\Z')

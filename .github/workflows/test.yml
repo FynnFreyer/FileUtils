@@ -9,7 +9,6 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: src
 
 jobs:
   build:
@@ -26,8 +25,7 @@ jobs:
     - name: Setup Environment
       run: |
         # Add src and tst to $PYTHONPATH
-        echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/src:${PWD}/tst" >> $GITHUB_ENV
-        echo "$PYTHONPATH"
+        echo "PYTHONPATH=${PYTHONPATH}:${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}/tst" >> $GITHUB_ENV
         # install tree on macos
         if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree ;fi
     - name: Set up Python ${{ matrix.python-version }}
@@ -49,5 +47,5 @@ jobs:
       run: |
         cd ../tst
         # Windows somehow doesn't find the modules in src, despite the path being set to include it. Get bent with a sharp stick Billy
-        if [ ${{ matrix.os }} == 'windows-latest' ]; then cp -a ../src/* . ;fi
+        # if [ ${{ matrix.os }} == 'windows-latest' ]; then cp -a ../src/* . ;fi
         pytest

@@ -80,7 +80,8 @@ def translate_glob_patterns(patterns: list[str] | None) -> list[str]:
             # we don't want these to match os.sep, so we replace appropriately:
             #     the pattern that matches everything '.*' is replaced by
             #     the pattern that matches everything but os.sep rf'[^{os.sep}]*'
-            translated_part = translated_part.replace(r'.*', rf'[^{os.sep}]*')
+            # TODO change back after test if unsuccessful
+            translated_part = translated_part.replace(r'.*', f'[^{os.sep}]*')
 
             # fnmatch appends r'\Z' (matches end of string) to the end, so we strip that off the parts
             translated_part = translated_part.rstrip(r'\Z')
@@ -127,6 +128,7 @@ def compile_glob_patterns(patterns: list[str] | None, regex_flags: list[re.Regex
     # so now there is a dedicated function translate_glob_patterns
 
     translated_patterns = translate_glob_patterns(patterns)
+    # TODO remove after debug
     print(translated_patterns)
     compiled_patterns = [re.compile(translated_pattern, flags=flags) for translated_pattern in translated_patterns]
 

@@ -1,3 +1,5 @@
+import sys
+
 from util.traversal import traverse_file_tree, translate_glob_patterns, compile_glob_patterns
 
 
@@ -82,9 +84,23 @@ class TestGlobPatterns:
         pattern = compile_glob_patterns(['/path/to/*/foo'])[0]
         assert pattern.match('/path/to/another/foo')
 
-    def test_single_asterisk_respects_separators(self):
+    def test_single_asterisk_respects_separators_unix(self):
+        # unix specific, skip on windows
+        if sys.platform.startswith('win'):
+            print('\nSKIPPED ON WINDOWS\n')
+            return
+
         pattern = compile_glob_patterns(['/path/to/*/foo'])[0]
         assert not pattern.match('/path/to/yet/another/foo')
+
+    def test_single_asterisk_respects_separators_windows(self):
+        # windows specific, skip on unix
+        if not sys.platform.startswith('win'):
+            print('\nSKIPPED ON UNIX\n')
+            return
+
+        pattern = compile_glob_patterns([r'C:\path\to\*\foo'])[0]
+        assert not pattern.match(r'C:\path\to\yet\another\foo')
 
     def test_patterns_dont_extend_past_definition(self):
         pattern = compile_glob_patterns(['/path/to/foo'])[0]

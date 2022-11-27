@@ -127,6 +127,7 @@ def compile_glob_patterns(patterns: list[str] | None, regex_flags: list[re.Regex
     # so now there is a dedicated function translate_glob_patterns
 
     translated_patterns = translate_glob_patterns(patterns)
+    print(translated_patterns)
     compiled_patterns = [re.compile(translated_pattern, flags=flags) for translated_pattern in translated_patterns]
 
     return compiled_patterns

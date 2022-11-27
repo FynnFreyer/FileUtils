@@ -12,7 +12,7 @@ def gitignore_to_glob_pattern(root: str, pattern: str) -> str:
     Takes the absolute root of a git repo, and gitignore patterns, and translates them into absolute glob patterns.
     """
     starting_slash = pattern.startswith('/')
-    trailing_slash = pattern.endswith('/')
+    # trailing_slash = pattern.endswith('/')
 
     parts = pattern.split('/')
     non_empty_parts = [part for part in parts if part != '']
@@ -20,10 +20,10 @@ def gitignore_to_glob_pattern(root: str, pattern: str) -> str:
     middle_slash = len(non_empty_parts) >= 2
 
     relative_to_root = starting_slash or middle_slash
-    only_dirs = trailing_slash
+    # only_dirs = trailing_slash
 
     # make sure root has trailing slash
-    root = root + os.sep  if not root.endswith(os.sep) else root
+    root = root + os.sep if not root.endswith(os.sep) else root
 
     # make sure pattern has no starting slash
     pattern = pattern.lstrip('/') if pattern.startswith('/') else pattern
@@ -34,6 +34,7 @@ def gitignore_to_glob_pattern(root: str, pattern: str) -> str:
         return root + pattern
     else:
         return root + '**' + pattern
+
 
 def translate_glob_patterns(patterns: list[str] | None) -> list[str]:
     """

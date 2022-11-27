@@ -104,7 +104,7 @@ def translate_glob_patterns(patterns: list[str] | None) -> list[str]:
             #  doing so should actually be unnecessary, because str(dir_path) does not come with a trailing slash,
             #  but how do we ensure the opposite, that a trailing slash only matches dirs,
             #  instead of just excluding everything?
-            translated_pattern += rf'{os.sep}?'
+            translated_pattern += escape(rf'{os.sep}?')
 
         # now we append r'\Z' to the pattern to avoid matches with longer strings
         translated_pattern += r'\Z'

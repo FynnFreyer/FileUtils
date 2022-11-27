@@ -4,6 +4,8 @@ from pathlib import Path
 from shutil import copyfile
 from yaml import safe_load as load, safe_dump as dump
 
+test_dir = Path(__file__).parent.resolve()
+
 
 class FileTreeBuilder:
     def __init__(self, tmp_path_factory):
@@ -45,12 +47,12 @@ def tree_builder(tmp_path_factory):
 
 @pytest.fixture(scope='class')
 def file_tree(tree_builder):
-    return tree_builder.from_yaml('assets/test_traversal.yaml')
+    return tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
 
 
 @pytest.fixture(scope='class')
 def file_tree_with_gitignore(tree_builder):
     # we don't rely on the file_tree fixture, to not pollute it for other tests
-    root = tree_builder.from_yaml('assets/test_traversal.yaml')
-    copyfile('assets/test_traversal.gitignore', root / '.gitignore')
+    root = tree_builder.from_yaml(test_dir / 'assets/test_traversal.yaml')
+    copyfile(test_dir / 'assets/test_traversal.gitignore', root / '.gitignore')
     return root

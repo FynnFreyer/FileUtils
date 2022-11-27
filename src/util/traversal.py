@@ -124,9 +124,12 @@ def compile_glob_patterns(patterns: list[str] | None, regex_flags: list[re.Regex
     # used to be done with
     # [re.compile(fnmatch.translate(pattern), flags=flag) for pattern in patterns]
     # but this does not properly treat '*' and '**' with regard to directory separators,
-    # so now there is a dedicated function
+    # so now there is a dedicated function translate_glob_patterns
 
-    return [re.compile(translated_pattern, flags=flags) for translated_pattern in translate_glob_patterns(patterns)]
+    translated_patterns = translate_glob_patterns(patterns)
+    compiled_patterns = [re.compile(translated_pattern, flags=flags) for translated_pattern in translated_patterns]
+
+    return compiled_patterns
 
 
 def traverse_file_tree(root: str | bytes | os.PathLike | Path,

@@ -19,7 +19,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Add src to $PYTHONPATH
-      run: echo "PYTHONPATH=$PYTHONPATH:src" >> $GITHUB_ENV
+      run: |
+        PWD=$(pwd)
+        echo "PYTHONPATH=$PYTHONPATH:$PWD/src:$PWD/tst" >> $GITHUB_ENV
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:

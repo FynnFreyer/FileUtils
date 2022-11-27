@@ -23,10 +23,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Setup
+    - name: Setup Environment
       run: |
-        # Add src to $PYTHONPATH
-        echo "PYTHONPATH=${PYTHONPATH}:${PWD}/src:${PWD}/tst" >> $GITHUB_ENV
+        # Add src and tst to $PYTHONPATH
+        echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/../tst" >> $GITHUB_ENV
         # install tree on macos
         if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree;fi
     - name: Set up Python ${{ matrix.python-version }}
@@ -46,4 +46,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
     - name: Test with pytest
       run: |
-        pytest ../tst
+        cd ../tst
+        pytest

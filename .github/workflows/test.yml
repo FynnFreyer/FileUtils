@@ -27,6 +27,7 @@ jobs:
       run: |
         # Add src and tst to $PYTHONPATH
         echo "PYTHONPATH=${PYTHONPATH}:${PWD}:${PWD}/src:${PWD}/tst" >> $GITHUB_ENV
+        echo "$PYTHONPATH"
         # install tree on macos
         if [ ${{ matrix.os }} == 'macos-latest' ]; then brew install tree ;fi
     - name: Set up Python ${{ matrix.python-version }}
